@@ -23,6 +23,12 @@ class IdentifierStateMachine(core.Construct):
         generate_thumbnails_fn_dir = os.path.join(
             os.path.dirname(__file__), 'thumbnail')
 
+        imLayer = aws_lambda.LayerVersion(
+            self, 'IMLayer',
+            description='An image magick layer',
+            code=aws_lambda.Code.from_asset(os.path.join(os.path.dirname(__file__), 'image-magick.zip'))
+        )
+
         for dir in (
             extract_image_metadata_fn_dir,
             detect_labels_fn_dir,
@@ -37,8 +43,9 @@ class IdentifierStateMachine(core.Construct):
             description='Extract image metadata such as format, size, geolocation, etc.',
             code=aws_lambda.Code.from_asset(extract_image_metadata_fn_dir),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_X,
             memory_size=1024,
+            layers=[imLayer],
             timeout=core.Duration.seconds(200)
         )
         # Allow extraction function to get photos
@@ -51,8 +58,9 @@ class IdentifierStateMachine(core.Construct):
             code=aws_lambda.Code.from_asset(os.path.join(
                 os.path.dirname(__file__), 'transform-metadata')),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_,
             memory_size=256,
+            layers=[imLayer],
             timeout=core.Duration.seconds(60)
         )
 
@@ -63,7 +71,7 @@ class IdentifierStateMachine(core.Construct):
             code=aws_lambda.Code.from_asset(os.path.join(
                 os.path.dirname(__file__), 'store-image-metadata')),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_X,
             environment={
                 'IMAGE_METADATA_DDB_TABLE': image_metadata_table.table_name
             },
@@ -79,7 +87,7 @@ class IdentifierStateMachine(core.Construct):
             description='Use Amazon Rekognition to detect labels from image',
             code=aws_lambda.Code.from_asset(detect_labels_fn_dir),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_X,
             memory_size=256,
             timeout=core.Duration.seconds(60)
         )
@@ -97,7 +105,7 @@ class IdentifierStateMachine(core.Construct):
             description='Generate thumbnails for images',
             code=aws_lambda.Code.from_asset(generate_thumbnails_fn_dir),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_X,
             memory_size=1536,
             timeout=core.Duration.minutes(5)
         )
@@ -206,7 +214,7 @@ class IdentifierStateMachine(core.Construct):
                              'state-machine-describe-execution')
             )),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_X,
             memory_size=1024,
             timeout=core.Duration.seconds(200)
         )

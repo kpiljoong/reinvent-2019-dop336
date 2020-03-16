@@ -153,7 +153,7 @@ class ImageRecognitionProcessingStack(core.Stack):
             code=aws_lambda.Code.from_asset(os.path.join(
                 os.path.dirname(__file__), 'start-execution')),
             handler='index.handler',
-            runtime=aws_lambda.Runtime.NODEJS_8_10,
+            runtime=aws_lambda.Runtime.NODEJS_10_X,
             environment={
                 'STATE_MACHINE_ARN': state_machine.state_machine_arn,
                 'IMAGE_METADATA_DDB_TABLE': image_metadata_table.table_name
